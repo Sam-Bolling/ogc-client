@@ -61,7 +61,7 @@ src/
 
 app/
 └── examples/
-    └── csapi.ts                ← Example usage of CSAPI client
+    └── csapi.ts                            ← Example usage of CSAPI client
 
 src/components/ogc-api/
 └── OgcApiEndpoint.vue                      ← Update to conditionally expose CSAPI
@@ -190,6 +190,7 @@ These methods will be considered after MVP completion:
 ## 📜 Compliance Note
 
 This implementation is compliant with the OGC API - Connected Systems specification based on modular support for core entities. Additional entities will be added incrementally. Capability detection ensures that unsupported endpoints are not exposed, preserving interoperability and graceful degradation.
+
 
 
 
