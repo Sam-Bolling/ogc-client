@@ -1,8 +1,8 @@
 # 🧭 Implementation Plan: OGC API Connected Systems Client
 
-This document outlines the step-by-step plan for integrating support for the OGC API - Connected Systems standard into the [`camptocamp/ogc-client`](https://github.com/camptocamp/ogc-client) TypeScript library. Development is performed in [Sam-Bolling/ogc-client](https://github.com/Sam-Bolling/ogc-client) and tracked in [OS4CSAPI](https://github.com/users/Sam-Bolling/projects/1) with the intent to contribute upstream via [Issue #118](https://github.com/camptocamp/ogc-client/issues/118).
+This document outlines the step-by-step plan for integrating support for the OGC API - Connected Systems standard into the [`camptocamp/ogc-client`](https://github.com/camptocamp/ogc-client) TypeScript library. Development is tracked in [Sam-Bolling/ogc-client](https://github.com/Sam-Bolling/ogc-client) with the intent to contribute upstream via [Issue #118](https://github.com/camptocamp/ogc-client/issues/118).
 
-This implementation follows a Test-Driven Development (TDD) workflow: each method will be defined by its expected behavior through failing tests before implementation begins. This ensures clarity, coverage, and contributor confidence.
+This implementation follows a **Test-Driven Development (TDD)** workflow: each method will be defined by its expected behavior through failing tests before implementation begins. This ensures clarity, coverage, and contributor confidence.
 
 ---
 
@@ -15,7 +15,7 @@ This implementation follows a Test-Driven Development (TDD) workflow: each metho
 - Capability detection for conditional exposure  
 - Compliance with CSAPI spec via modular implementation  
 - Contribution to upstream repo with maintainable design  
-- Test-Driven Development (TDD) as a foundational workflow  
+- **Test-Driven Development (TDD)** as a foundational workflow  
 
 ---
 
@@ -27,35 +27,61 @@ This approach mirrors how EDR support is integrated — using capability detecti
 
 ### Key Design Principles
 
-- **Composition over inheritance**: CSAPI logic is injected as a property (`connectedSystems`) only if the server advertises support.  
-- **Modular client structure**: Each API (Features, EDR, CSAPI) lives in its own file and namespace, promoting separation of concerns.  
-- **Capability detection**: The main client will expose `.connectedSystems` only if CSAPI-specific links or metadata are present.  
-- **Type safety**: All query parameters and responses will use TypeScript interfaces and `Record<string, string>` for flexible filtering.  
-- **Testability**: Each method will be covered by unit tests using `vitest` or `jest`, with mock responses for isolated validation.  
-- **TDD-first workflow**: All behavior will be defined via failing tests before implementation begins, following the Red → Green → Refactor cycle.  
+- **Composition over inheritance**: CSAPI logic is injected as a property (`connectedSystems`) only if the server advertises support  
+- **Modular client structure**: Each API (Features, EDR, CSAPI) lives in its own folder and namespace  
+- **Capability detection**: The main client will expose `.connectedSystems` only if CSAPI-specific links or metadata are present  
+- **Type safety**: All query parameters and responses will use TypeScript interfaces and `Record<string, string>` for flexible filtering  
+- **Testability**: Each method will be covered by unit tests using Jest, with mock responses for isolated validation  
+- **TDD-first workflow**: All behavior will be defined via failing tests before implementation begins, following the Red → Green → Refactor cycle  
 
 This design ensures that CSAPI support can be added without disrupting existing functionality, and can be cleanly merged back into the upstream repo via a pull request referencing [Issue #118](https://github.com/camptocamp/ogc-client/issues/118).
 
 ---
 
-## 📁 Recommended File Structure
+## 📁 Recommended File Structure and Integration Points
 
-Before coding begins, set up the following folders and files to support modular development and test-first workflows:
+To align with existing modules like EDR, CSAPI support will be added under `src/ogc-api/connected-systems`. Additional integration points will follow the precedent set in [PR #114](https://github.com/camptocamp/ogc-client/pull/114).
 
 ```plaintext
 src/
-├── client/
-│   ├── connectedSystemsClient.ts       ← CSAPI method implementations
-│   ├── index.ts                        ← Main client entry point
-├── types/
-│   └── csapi.ts                        ← Shared CSAPI types/interfaces
-├── utils/
-│   └── fetch.ts                        ← Reusable fetch wrapper (optional)
-tests/
-└── connectedSystemsClient.test.ts      ← Unit tests for CSAPI methods
+└── ogc-api/
+    └── connected-systems/
+        ├── ConnectedSystemsClient.ts        ← Main class for CSAPI methods
+        ├── ConnectedSystemsClient.spec.ts   ← Unit tests for client methods
+        ├── endpoint.ts                      ← Fetch logic for CSAPI endpoints
+        ├── endpoint.spec.ts                 ← Tests for endpoint logic
+        ├── model.ts                         ← Type-safe response modeling
+        ├── model.spec.ts                    ← Tests for model logic
+        ├── helpers.ts                       ← Utility functions (e.g. query encoding)
+        ├── helpers.spec.ts                  ← Tests for helpers
+        ├── link_utils.ts                    ← Optional: link parsing utilities
+        ├── link-utils.spec.ts               ← Tests for link utilities
+        ├── url_builder.ts                   ← Optional: dynamic URL construction
+        ├── info.ts                          ← Optional: CSAPI metadata handling
+        ├── index.ts                         ← Entry point for module export
+
+app/
+└── examples/
+    └── connected-systems.ts                ← Example usage of CSAPI client
+
+src/components/ogc-api/
+└── OgcApiEndpoint.vue                      ← Update to conditionally expose CSAPI
+
+fixtures/ogc-api/
+└── connected-systems/
+    └── sample-data-hub.json               ← Mock CSAPI response data
+
+collections/
+├── conformance.json                       ← Update to include CSAPI conformance class
+├── reservoir-api.json                     ← Update if CSAPI endpoints are added
+├── collections.json                       ← Update if CSAPI collections are exposed
+
+sample-data-hub/
+└── collections.json                       ← Update if CSAPI collections are exposed
 ```
 
-This structure ensures separation of concerns, supports reusable patterns, and keeps tests close to the implementation.
+**Testing Note:**  
+This repo uses Jest and colocates tests with implementation files using `.spec.ts`. Follow this pattern for all CSAPI modules. Use mock fixtures from `fixtures/ogc-api/connected-systems/` to isolate behavior.
 
 ---
 
@@ -64,7 +90,7 @@ This structure ensures separation of concerns, supports reusable patterns, and k
 <details>
 <summary>🟨 Phase 0: Planning & Setup</summary>
 
-- [x] Fork `camptocamp/ogc-client` and clone locally  
+- [x] Fork `camptocamp/ogc-client` and clone locally or use GitHub.dev  
 - [x] Create feature branch `feature/ogc-connected-systems`  
 - [x] Enable Issues tab in fork  
 - [x] Create GitHub Project board  
@@ -76,28 +102,28 @@ This structure ensures separation of concerns, supports reusable patterns, and k
 <details>
 <summary>🟦 Phase 1: Scaffolding & Test Setup</summary>
 
-- [ ] Create file structure for CSAPI module and tests (see 📁 Recommended File Structure)  
-- [ ] Scaffold CSAPI module (`src/client/connectedSystemsClient.ts`)  
-- [ ] Create shared types (`src/types/csapi.ts`)  
-- [ ] Set up test framework (`vitest` or `jest`)  
-- [ ] Create initial test file (`tests/connectedSystemsClient.test.ts`)  
-- [ ] Write failing tests for placeholder methods  
-- [ ] Add capability detection stub (`hasConnectedSystemsSupport()`)  
+- [ ] Create file structure under `src/ogc-api/connected-systems`  
+- [ ] Scaffold `ConnectedSystemsClient.ts` and `index.ts`  
+- [ ] Create placeholder files for `model.ts`, `endpoint.ts`, `helpers.ts`, etc.  
+- [ ] Create `.spec.ts` test files for each module  
+- [ ] Add mock fixture file under `fixtures/ogc-api/connected-systems/sample-data-hub.json`  
+- [ ] Set up Jest test framework (already present in repo)  
 
 </details>
 
 <details>
-<summary>🟩 Phase 2: Capability Detection </summary>
+<summary>🟩 Phase 2: Capability Detection (TDD)</summary>
 
 - [ ] Write test: `.connectedSystems` is undefined when CSAPI is not supported  
 - [ ] Write test: `.connectedSystems` is defined when CSAPI endpoints are present  
 - [ ] Implement detection logic to pass tests  
 - [ ] Integrate CSAPI into main client using composition  
+- [ ] Update `OgcApiEndpoint.vue` to expose CSAPI conditionally  
 
 </details>
 
 <details>
-<summary>🟦 Phase 3: Method Implementation </summary>
+<summary>🟦 Phase 3: Method Implementation (TDD)</summary>
 
 For each method:
 
@@ -128,8 +154,8 @@ Methods to implement:
 <details>
 <summary>🟨 Phase 5: Documentation & Contributor Experience</summary>
 
-- [ ] Add usage examples to README  
-- [ ] Document TDD workflow in CONTRIBUTING.md  
+- [ ] Add usage examples to `app/examples/connected-systems.ts`  
+- [ ] Document TDD workflow in `CONTRIBUTING.md`  
 - [ ] Tag “Good First Issues” for scoped tasks  
 - [ ] Create GitHub milestone and label for CSAPI implementation  
 
@@ -138,8 +164,9 @@ Methods to implement:
 <details>
 <summary>🟥 Phase 6: Finalization</summary>
 
-- [ ] Open pull request to upstream repo  
-- [ ] Respond to maintainer feedback  
+- [ ] Open pull request to your fork’s `main` branch  
+- [ ] Review and test integration  
+- [ ] Respond to feedback or prepare for upstream contribution  
 
 </details>
 
