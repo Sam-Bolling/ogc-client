@@ -102,9 +102,9 @@ This repo uses Jest and colocates tests with implementation files using `.spec.t
 <details>
 <summary>🟦 Phase 1: Scaffolding & Test Setup</summary>
 
-- [ ] Create file structure under `src/ogc-api/connected-systems`  
+- [x] Create file structure under `src/ogc-api/connected-systems`  
 - [ ] Scaffold `ConnectedSystemsClient.ts` and `index.ts`  
-- [ ] Create placeholder files for `model.ts`, `endpoint.ts`, `helpers.ts`, etc.  
+- [x] Create placeholder files for `model.ts`, `endpoint.ts`, `helpers.ts`, etc.  
 - [ ] Create `.spec.ts` test files for each module  
 - [ ] Add mock fixture file under `fixtures/ogc-api/connected-systems/sample-data-hub.json`  
 - [ ] Set up Jest test framework (already present in repo)  
@@ -190,4 +190,5 @@ These methods will be considered after MVP completion:
 ## 📜 Compliance Note
 
 This implementation is compliant with the OGC API - Connected Systems specification based on modular support for core entities. Additional entities will be added incrementally. Capability detection ensures that unsupported endpoints are not exposed, preserving interoperability and graceful degradation.
+
 
