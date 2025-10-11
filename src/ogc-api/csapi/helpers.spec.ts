@@ -1,121 +1,105 @@
 import {
-  ZParameter,
+  extractParameters,
+  validateCrs,
+  bboxToString,
+  DateTimeParameterToCSAPIString,
   zParameterToString,
-  optionalAreaParams,
-  optionalLocationParams,
-  optionalCubeParams,
-  optionalTrajectoryParams,
-  optionalCorridorParams,
-  optionalPositionParams,
-  optionalRadiusParams,
-} from './model.js';
-import { DateTimeParameter } from '../../shared/models.js';
+  ZParameter,
+} from './helpers';
+import { CSAPIParameter } from './model';
 
-describe('zParameterToString', () => {
-  test('single level', () => {
-    const z: ZParameter = { type: 'single', level: 850 };
-    expect(zParameterToString(z)).toBe('850');
+describe('CSAPI Helpers', () => {
+  describe('extractParameters', () => {
+    it('should return array of CSAPIParameter objects', () => {
+      const input: Record<string, any> = {
+        p1: { id: 'p1', name: 'param1', observedProperty: { label: { id: 'op1', en: 'Prop1' } }, unit: { label: { en: 'unit' }, symbol: { value: 'u', type: 'type' } } },
+        p2: { id: 'p2', name: 'param2', observedProperty: { label: { id: 'op2', en: 'Prop2' } }, unit: { label: { en: 'unit2' }, symbol: { value: 'u2', type: 'type2' } } },
+      };
+      const result = extractParameters(input);
+      expect(result.length).toBe(2);
+      expect(result[0].id).toBe('p1');
+      expect(result[1].id).toBe('p2');
+    });
   });
 
-  test('interval (min/max)', () => {
-    const z: ZParameter = { type: 'interval', minLevel: 100, maxLevel: 550 };
-    expect(zParameterToString(z)).toBe('100/550');
+  describe('validateCrs', () => {
+    const supported = ['EPSG:4326', 'EPSG:3857'];
+
+    it('should return valid CRS', () => {
+      expect(validateCrs('EPSG:4326', supported)).toBe('EPSG:4326');
+    });
+
+    it('should throw for unsupported CRS', () => {
+      expect(() => validateCrs('EPSG:9999', supported)).toThrow(
+        /Unsupported CRS: 'EPSG:9999'/
+      );
+    });
   });
 
-  test('list of levels', () => {
-    const z: ZParameter = { type: 'list', levels: [10, 80, 200] };
-    expect(zParameterToString(z)).toBe('10,80,200');
+  describe('bboxToString', () => {
+    it('should convert valid bbox to string', () => {
+      const bbox = [
+        [0, 1],
+        [2, 3],
+      ];
+      expect(bboxToString(bbox)).toBe('0,1,2,3');
+    });
+
+    it('should throw on invalid bbox', () => {
+      expect(() => bboxToString([[0, 1]])).toThrow(/Invalid bbox format/);
+    });
   });
 
-  test('repeating interval', () => {
-    const z: ZParameter = {
-      type: 'repeating',
-      repeat: 20,
-      minLevel: 100,
-      step: 50,
-    };
-    expect(zParameterToString(z)).toBe('R20/100/50');
+  describe('DateTimeParameterToCSAPIString', () => {
+    const toDate = (str: string) => new Date(str);
+
+    it('serializes a plain Date', () => {
+      const result = DateTimeParameterToCSAPIString(toDate('2025-01-01T00:00:00Z'));
+      expect(result).toBe('2025-01-01T00:00:00.000Z');
+    });
+
+    it('serializes with only start', () => {
+      const result = DateTimeParameterToCSAPIString({ start: toDate('2025-01-01T00:00:00Z') });
+      expect(result).toBe('2025-01-01T00:00:00.000Z/..');
+    });
+
+    it('serializes with only end', () => {
+      const result = DateTimeParameterToCSAPIString({ end: toDate('2025-12-31T23:59:59Z') });
+      expect(result).toBe('../2025-12-31T23:59:59.000Z');
+    });
+
+    it('serializes with start and end', () => {
+      const result = DateTimeParameterToCSAPIString({
+        start: toDate('2025-01-01T00:00:00Z'),
+        end: toDate('2025-12-31T23:59:59Z'),
+      });
+      expect(result).toBe('2025-01-01T00:00:00.000Z/2025-12-31T23:59:59.000Z');
+    });
+
+    it('throws if invalid', () => {
+      expect(() => DateTimeParameterToCSAPIString({} as any)).toThrow();
+    });
   });
 
-  test('list with single element should still stringify correctly', () => {
-    const z: ZParameter = { type: 'list', levels: [42] };
-    expect(zParameterToString(z)).toBe('42');
-  });
+  describe('zParameterToString', () => {
+    it('handles single level', () => {
+      const z: ZParameter = { type: 'single', level: 850 };
+      expect(zParameterToString(z)).toBe('850');
+    });
 
-  test('interval minLevel greater than maxLevel still produces string', () => {
-    const z: ZParameter = { type: 'interval', minLevel: 500, maxLevel: 100 };
-    expect(zParameterToString(z)).toBe('500/100');
-  });
-});
+    it('handles interval', () => {
+      const z: ZParameter = { type: 'interval', minLevel: 100, maxLevel: 550 };
+      expect(zParameterToString(z)).toBe('100/550');
+    });
 
-describe('Optional CSAPI query parameter types', () => {
-  const dummyDate: DateTimeParameter = new Date('2025-01-01T00:00:00Z');
+    it('handles list', () => {
+      const z: ZParameter = { type: 'list', levels: [10, 80, 200] };
+      expect(zParameterToString(z)).toBe('10,80,200');
+    });
 
-  test('optionalAreaParams can be constructed with all fields', () => {
-    const params: optionalAreaParams = {
-      parameter_name: ['temp', 'humidity'],
-      z: { type: 'single', level: 1000 },
-      datetime: dummyDate,
-      crs: 'EPSG:4326',
-      f: 'json',
-    };
-    expect(params.parameter_name).toContain('temp');
-    expect(params.z?.type).toBe('single');
-    expect(params.datetime).toBe(dummyDate);
-    expect(params.crs).toBe('EPSG:4326');
-    expect(params.f).toBe('json');
-  });
-
-  test('optionalLocationParams can be constructed with locationId', () => {
-    const params: optionalLocationParams = {
-      locationId: 'LOC123',
-    };
-    expect(params.locationId).toBe('LOC123');
-  });
-
-  test('optionalCubeParams allows z and datetime', () => {
-    const params: optionalCubeParams = {
-      z: { type: 'interval', minLevel: 0, maxLevel: 500 },
-      datetime: dummyDate,
-    };
-    expect(params.z?.type).toBe('interval');
-    expect(params.datetime).toBe(dummyDate);
-  });
-
-  test('optionalTrajectoryParams can have crs and f', () => {
-    const params: optionalTrajectoryParams = {
-      crs: 'EPSG:4326',
-      f: 'csv',
-    };
-    expect(params.crs).toBe('EPSG:4326');
-    expect(params.f).toBe('csv');
-  });
-
-  test('optionalCorridorParams allows resolution fields', () => {
-    const params: optionalCorridorParams = {
-      resolution_x: '10m',
-      resolution_y: '10m',
-      resolution_z: '1m',
-    };
-    expect(params.resolution_x).toBe('10m');
-    expect(params.resolution_y).toBe('10m');
-    expect(params.resolution_z).toBe('1m');
-  });
-
-  test('optionalPositionParams allows z and datetime', () => {
-    const params: optionalPositionParams = {
-      z: { type: 'list', levels: [100, 200] },
-      datetime: dummyDate,
-    };
-    expect(params.z?.type).toBe('list');
-    expect(params.datetime).toBe(dummyDate);
-  });
-
-  test('optionalRadiusParams allows parameter_name array', () => {
-    const params: optionalRadiusParams = {
-      parameter_name: ['salinity', 'temperature'],
-    };
-    expect(params.parameter_name).toContain('salinity');
-    expect(params.parameter_name).toContain('temperature');
+    it('handles repeating', () => {
+      const z: ZParameter = { type: 'repeating', repeat: 20, minLevel: 100, step: 50 };
+      expect(zParameterToString(z)).toBe('R20/100/50');
+    });
   });
 });
