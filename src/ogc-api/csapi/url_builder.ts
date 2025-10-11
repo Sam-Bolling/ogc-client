@@ -1,155 +1,177 @@
-/**
- * url_builder.ts
- * 
- * URL builder for OGC API – Common Standards API (CSAPI)
- *
- * This module provides utility methods for constructing valid URLs
- * targeting CSAPI endpoints, consistent with the ogc-client design
- * pattern used for OGC API - EDR and other standards.
- *
- * -------------------------------------------------------------------
- * CSAPI Part 1 – Core (Collections and Parameters)
- * CSAPI Part 2 – Dynamic Data
- * -------------------------------------------------------------------
- */
-
-import { CSAPIParameter } from './model.js';
-import { extractParameters } from './helpers.js';
+import { CrsCode } from '../../shared/models.js';
+import {
+  DataQueryType,
+  CsapiParameterInfo,
+  OgcApiCollectionInfo,
+} from './model.js';
+import { DateTimeParameterToCSAPIString } from './helpers.js';
+import {
+  optionalFeatureParams,
+  optionalDynamicParams,
+  WellKnownTextString,
+  zParameterToString,
+} from './model.js';
 
 /**
- * Main URL builder for OGC API – Common Standards API (CSAPI)
+ * Builds query URLs according to the OGC CSAPI standard
+ * Part 1: Feature Resources – https://docs.ogc.org/is/23-001/23-001.html
+ * Part 2: Dynamic Data – https://docs.ogc.org/is/23-002/23-002.html
  */
-export class CSAPIUrlBuilder {
-  constructor(private baseUrl: string) {}
+export default class CSAPIQueryBuilder {
+  private supported_query_types: {
+    feature: boolean;
+    dynamic: boolean;
+    instances: boolean;
+  };
 
-  /**
-   * ------------------------------------------------------------
-   * 🧩 CSAPI Part 1 – Core
-   * ------------------------------------------------------------
-   */
+  public supported_parameters: Record<string, CsapiParameterInfo> = {};
+  public supported_crs: CrsCode[] = [];
+  public links: {
+    type: string;
+    href: string;
+    title: string;
+    rel: string;
+  }[] = [];
 
-  /**
-   * Get the base landing page URL.
-   * Equivalent to `/` in most OGC API implementations.
-   */
-  landingPage(): string {
-    return `${this.baseUrl}/`;
+  constructor(private collection: OgcApiCollectionInfo) {
+    if (!collection.data_queries) {
+      throw new Error('No data queries found, cannot issue CSAPI queries');
+    }
+
+    this.supported_query_types = {
+      feature: collection.data_queries.feature !== undefined,
+      dynamic: collection.data_queries.dynamic !== undefined,
+      instances: collection.data_queries.instances !== undefined,
+    };
+
+    this.supported_parameters = collection.parameter_names;
+    this.supported_crs = collection.crs;
+    this.links = collection.links;
   }
 
   /**
-   * Get the conformance URL.
-   * Used to retrieve which parts/requirements of the CSAPI the server supports.
+   * Return the set of CSAPI queries supported by this collection
    */
-  conformance(): string {
-    return `${this.baseUrl}/conformance`;
-  }
-
-  /**
-   * Get the collections URL.
-   * Represents the entry point to all available collections.
-   */
-  collections(): string {
-    return `${this.baseUrl}/collections`;
-  }
-
-  /**
-   * Get the URL for a specific collection by ID.
-   * @param collectionId - The identifier of the collection.
-   */
-  collection(collectionId: string): string {
-    return `${this.collections()}/${collectionId}`;
-  }
-
-  /**
-   * Get the URL for a collection’s parameter definitions.
-   * Part 1 defines “parameters” as descriptive metadata for each collection.
-   * @param collectionId - The identifier of the collection.
-   */
-  collectionParameters(collectionId: string): string {
-    return `${this.collection(collectionId)}/parameters`;
-  }
-
-  /**
-   * Build a URL for querying the data queries advertised by a collection.
-   * Typically exposed in the collection’s metadata under `data_queries`.
-   * @param collectionId - The identifier of the collection.
-   * @param queryType - A named data query (e.g., "position", "area", etc.)
-   */
-  collectionDataQuery(collectionId: string, queryType: string): string {
-    return `${this.collection(collectionId)}/${queryType}`;
-  }
-
-  /**
-   * ------------------------------------------------------------
-   * ⚙️ CSAPI Part 2 – Dynamic Data
-   * ------------------------------------------------------------
-   */
-
-  /**
-   * Build a URL for dynamic data resources within a collection.
-   * Dynamic data provides access to real-time or frequently updated datasets.
-   *
-   * @param collectionId - The collection identifier.
-   * @param parameterId - The specific parameter or data variable identifier.
-   */
-  dynamicData(collectionId: string, parameterId: string): string {
-    return `${this.collection(collectionId)}/dynamic-data/${parameterId}`;
-  }
-
-  /**
-   * Build a URL for accessing all available dynamic data endpoints for a collection.
-   * Useful for discovering available variables or dynamic data types.
-   * @param collectionId - The collection identifier.
-   */
-  dynamicDataRoot(collectionId: string): string {
-    return `${this.collection(collectionId)}/dynamic-data`;
-  }
-
-  /**
-   * ------------------------------------------------------------
-   * 🔧 Utility Methods
-   * ------------------------------------------------------------
-   */
-
-  /**
-   * Attach query parameters to a given URL.
-   * @param url - The base URL (e.g., from one of the above methods)
-   * @param query - Key/value pairs to append as query parameters
-   */
-  withQuery(
-    url: string,
-    query: Record<string, string | number | boolean | undefined | null>
-  ): string {
-    const u = new URL(url);
-
-    Object.entries(query).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        u.searchParams.append(key, String(value));
+  get supported_queries(): Set<DataQueryType> {
+    const queries: Set<DataQueryType> = new Set();
+    for (const [key, value] of Object.entries(this.supported_query_types)) {
+      if (value) {
+        queries.add(key as DataQueryType);
       }
-    });
-
-    return u.toString();
+    }
+    return queries;
   }
 
   /**
-   * Convenience method to generate parameter metadata URLs
-   * directly from a CSAPI collection object.
-   * This leverages the `extractParameters()` helper.
-   *
-   * @param collectionId - The collection identifier
-   * @param parameterBlock - The parameter metadata block from a collection
+   * Build a Feature query URL (CSAPI Part 1)
+   * @see https://docs.ogc.org/is/23-001/23-001.html#feature-resources
    */
-  fromCollectionParameters(
-    collectionId: string,
-    parameterBlock: Record<string, any>
-  ): string[] {
-    const params = extractParameters(parameterBlock) as CSAPIParameter[];
-    return params.map((p) =>
-      this.collectionParameters(collectionId) + `#${p.id}`
-    );
+  buildFeatureDownloadUrl(
+    coords: WellKnownTextString,
+    optional_params: optionalFeatureParams = {}
+  ): string {
+    if (!this.supported_query_types.feature) {
+      throw new Error('Collection does not support feature queries');
+    }
+
+    const url = new URL(this.collection.data_queries?.feature?.link.href);
+    url.searchParams.set('coords', coords);
+
+    if (optional_params.z !== undefined)
+      url.searchParams.set('z', zParameterToString(optional_params.z));
+
+    if (optional_params.datetime !== undefined)
+      url.searchParams.set(
+        'datetime',
+        DateTimeParameterToCSAPIString(optional_params.datetime)
+      );
+
+    if (optional_params.parameter_name) {
+      for (const parameter of optional_params.parameter_name) {
+        if (!this.supported_parameters[parameter]) {
+          throw new Error(
+            `The following parameter name does not exist: '${parameter}'`
+          );
+        }
+      }
+      url.searchParams.set(
+        'parameter-name',
+        optional_params.parameter_name.join(',')
+      );
+    }
+
+    if (optional_params.crs !== undefined) {
+      if (!this.supported_crs.includes(optional_params.crs)) {
+        throw new Error(`The following CRS is not supported: '${optional_params.crs}'`);
+      }
+      url.searchParams.set('crs', optional_params.crs);
+    }
+
+    if (optional_params.f !== undefined)
+      url.searchParams.set('f', optional_params.f);
+
+    return url.toString();
+  }
+
+  /**
+   * Build a Dynamic query URL (CSAPI Part 2)
+   * @see https://docs.ogc.org/is/23-002/23-002.html#dynamic-data
+   */
+  buildDynamicDownloadUrl(
+    coords: WellKnownTextString,
+    optional_params: optionalDynamicParams = {}
+  ): string {
+    if (!this.supported_query_types.dynamic) {
+      throw new Error('Collection does not support dynamic queries');
+    }
+
+    const url = new URL(this.collection.data_queries?.dynamic?.link.href);
+    url.searchParams.set('coords', coords);
+
+    if (optional_params.z !== undefined)
+      url.searchParams.set('z', zParameterToString(optional_params.z));
+
+    if (optional_params.datetime !== undefined)
+      url.searchParams.set(
+        'datetime',
+        DateTimeParameterToCSAPIString(optional_params.datetime)
+      );
+
+    if (optional_params.parameter_name) {
+      for (const parameter of optional_params.parameter_name) {
+        if (!this.supported_parameters[parameter]) {
+          throw new Error(
+            `The following parameter name does not exist: '${parameter}'`
+          );
+        }
+      }
+      url.searchParams.set(
+        'parameter-name',
+        optional_params.parameter_name.join(',')
+      );
+    }
+
+    if (optional_params.crs !== undefined) {
+      if (!this.supported_crs.includes(optional_params.crs)) {
+        throw new Error(`The following CRS is not supported: '${optional_params.crs}'`);
+      }
+      url.searchParams.set('crs', optional_params.crs);
+    }
+
+    if (optional_params.f !== undefined)
+      url.searchParams.set('f', optional_params.f);
+
+    return url.toString();
+  }
+
+  /**
+   * Having multiple instances of the same collection is allowed
+   * @see https://docs.ogc.org/is/23-001/23-001.html#_instances
+   */
+  buildInstancesDownloadUrl(): string {
+    if (!this.collection.data_queries?.instances) {
+      throw new Error('Collection does not support instances queries');
+    }
+    return this.collection.data_queries.instances.link.href;
   }
 }
-export function buildQueryUrl(baseHref: string, queryType: string, format = 'json'): string {
-  return `${baseHref}/${queryType}?f=${format}`;
-}
-
