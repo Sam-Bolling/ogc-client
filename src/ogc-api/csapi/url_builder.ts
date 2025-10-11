@@ -3,14 +3,12 @@ import {
   DataQueryType,
   CsapiParameterInfo,
   OgcApiCollectionInfo,
-} from './model.js';
-import { DateTimeParameterToCSAPIString } from './helpers.js';
-import {
   optionalFeatureParams,
   optionalDynamicParams,
   WellKnownTextString,
   zParameterToString,
 } from './model.js';
+import { DateTimeParameterToCSAPIString } from './helpers.js';
 
 /**
  * Builds query URLs according to the OGC CSAPI standard
@@ -35,7 +33,9 @@ export default class CSAPIQueryBuilder {
 
   constructor(private collection: OgcApiCollectionInfo) {
     if (!collection.data_queries) {
-      throw new Error('No data queries found, cannot issue CSAPI queries');
+      throw new Error(
+        `Collection '${collection.id ?? 'unknown'}' has no data queries; cannot issue CSAPI queries.`
+      );
     }
 
     this.supported_query_types = {
@@ -55,9 +55,7 @@ export default class CSAPIQueryBuilder {
   get supported_queries(): Set<DataQueryType> {
     const queries: Set<DataQueryType> = new Set();
     for (const [key, value] of Object.entries(this.supported_query_types)) {
-      if (value) {
-        queries.add(key as DataQueryType);
-      }
+      if (value) queries.add(key as DataQueryType);
     }
     return queries;
   }
@@ -71,10 +69,10 @@ export default class CSAPIQueryBuilder {
     optional_params: optionalFeatureParams = {}
   ): string {
     if (!this.supported_query_types.feature) {
-      throw new Error('Collection does not support feature queries');
+      throw new Error(`Collection '${this.collection.id}' does not support feature queries.`);
     }
 
-    const url = new URL(this.collection.data_queries?.feature?.link.href);
+    const url = new URL(this.collection.data_queries.feature.link.href);
     url.searchParams.set('coords', coords);
 
     if (optional_params.z !== undefined)
@@ -87,28 +85,26 @@ export default class CSAPIQueryBuilder {
       );
 
     if (optional_params.parameter_name) {
-      for (const parameter of optional_params.parameter_name) {
-        if (!this.supported_parameters[parameter]) {
+      for (const param of optional_params.parameter_name) {
+        if (!this.supported_parameters[param]) {
           throw new Error(
-            `The following parameter name does not exist: '${parameter}'`
+            `Parameter '${param}' is not supported by collection '${this.collection.id}'.`
           );
         }
       }
-      url.searchParams.set(
-        'parameter-name',
-        optional_params.parameter_name.join(',')
-      );
+      url.searchParams.set('parameter-name', optional_params.parameter_name.join(','));
     }
 
     if (optional_params.crs !== undefined) {
       if (!this.supported_crs.includes(optional_params.crs)) {
-        throw new Error(`The following CRS is not supported: '${optional_params.crs}'`);
+        throw new Error(
+          `CRS '${optional_params.crs}' is not supported by collection '${this.collection.id}'.`
+        );
       }
       url.searchParams.set('crs', optional_params.crs);
     }
 
-    if (optional_params.f !== undefined)
-      url.searchParams.set('f', optional_params.f);
+    if (optional_params.f !== undefined) url.searchParams.set('f', optional_params.f);
 
     return url.toString();
   }
@@ -122,10 +118,10 @@ export default class CSAPIQueryBuilder {
     optional_params: optionalDynamicParams = {}
   ): string {
     if (!this.supported_query_types.dynamic) {
-      throw new Error('Collection does not support dynamic queries');
+      throw new Error(`Collection '${this.collection.id}' does not support dynamic queries.`);
     }
 
-    const url = new URL(this.collection.data_queries?.dynamic?.link.href);
+    const url = new URL(this.collection.data_queries.dynamic.link.href);
     url.searchParams.set('coords', coords);
 
     if (optional_params.z !== undefined)
@@ -138,39 +134,37 @@ export default class CSAPIQueryBuilder {
       );
 
     if (optional_params.parameter_name) {
-      for (const parameter of optional_params.parameter_name) {
-        if (!this.supported_parameters[parameter]) {
+      for (const param of optional_params.parameter_name) {
+        if (!this.supported_parameters[param]) {
           throw new Error(
-            `The following parameter name does not exist: '${parameter}'`
+            `Parameter '${param}' is not supported by collection '${this.collection.id}'.`
           );
         }
       }
-      url.searchParams.set(
-        'parameter-name',
-        optional_params.parameter_name.join(',')
-      );
+      url.searchParams.set('parameter-name', optional_params.parameter_name.join(','));
     }
 
     if (optional_params.crs !== undefined) {
       if (!this.supported_crs.includes(optional_params.crs)) {
-        throw new Error(`The following CRS is not supported: '${optional_params.crs}'`);
+        throw new Error(
+          `CRS '${optional_params.crs}' is not supported by collection '${this.collection.id}'.`
+        );
       }
       url.searchParams.set('crs', optional_params.crs);
     }
 
-    if (optional_params.f !== undefined)
-      url.searchParams.set('f', optional_params.f);
+    if (optional_params.f !== undefined) url.searchParams.set('f', optional_params.f);
 
     return url.toString();
   }
 
   /**
-   * Having multiple instances of the same collection is allowed
+   * Build a query URL for multiple instances of the same collection
    * @see https://docs.ogc.org/is/23-001/23-001.html#_instances
    */
   buildInstancesDownloadUrl(): string {
-    if (!this.collection.data_queries?.instances) {
-      throw new Error('Collection does not support instances queries');
+    if (!this.collection.data_queries.instances) {
+      throw new Error(`Collection '${this.collection.id}' does not support instances queries.`);
     }
     return this.collection.data_queries.instances.link.href;
   }
