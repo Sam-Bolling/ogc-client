@@ -23,7 +23,7 @@ const apiRoot = process.env.CSAPI_API_ROOT || "https://example.csapi.server";
  * The API landing page SHALL advertise all canonical CSAPI Part 2 endpoints.
  */
 test("Landing page advertises all canonical CSAPI Part 2 endpoints", async () => {
-  const data = await maybeFetchOrLoad("endpoints_part2_landing", apiRoot);
+  const data = await maybeFetchOrLoad("endpointsPart2Landing", apiRoot);
 
   expect(data).toBeDefined();
   expect(Array.isArray(data.links)).toBe(true);
@@ -48,7 +48,8 @@ test("Landing page advertises all canonical CSAPI Part 2 endpoints", async () =>
 test("All canonical CSAPI Part 2 endpoints are accessible and return collections", async () => {
   for (const endpoint of CANONICAL_ENDPOINTS) {
     const url = `${apiRoot}/${endpoint}`;
-    const data = await maybeFetchOrLoad(`endpoint_${endpoint}`, url);
+    const fixtureKey = `endpoint_${endpoint.charAt(0).toLowerCase()}${endpoint.slice(1)}`;
+    const data = await maybeFetchOrLoad(fixtureKey, url);
 
     // Skip non-feature collections like properties, which may not use FeatureCollection
     if (data.type === "Collection" || data.members) {
@@ -67,7 +68,8 @@ test("All canonical CSAPI Part 2 endpoints are accessible and return collections
 test("Each canonical endpoint collection includes expected metadata", async () => {
   for (const endpoint of CANONICAL_ENDPOINTS) {
     const url = `${apiRoot}/${endpoint}`;
-    const data = await maybeFetchOrLoad(`endpoint_${endpoint}`, url);
+    const fixtureKey = `endpoint_${endpoint.charAt(0).toLowerCase()}${endpoint.slice(1)}`;
+    const data = await maybeFetchOrLoad(fixtureKey, url);
 
     if (data.links) {
       expect(Array.isArray(data.links)).toBe(true);
