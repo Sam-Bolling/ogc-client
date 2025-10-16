@@ -1,74 +1,48 @@
 /**
- * OGC API – Connected Systems: Commands Client
- * Implements client logic for CSAPI Command resources (Part 2 §11–12)
+ * OGC API – Connected Systems Part 2: Commands Client
+ * Implements client-side access for the /commands collection.
  *
- * Aligned with ControlStreams client but focuses on execution and feedback.
+ * Traces to:
+ *   - /req/command/collection-endpoint  (23-002 §10.17)
+ *   - /req/command/items-endpoint       (23-002 §10.18)
+ *   - /req/command/canonical-url        (23-002 §7.4)
+ *
+ * Exports:
+ *   - CommandsClient: main API client class
  */
 
-import { fetchJson } from "../../shared/http-utils";
-import { expandUrl } from "../../shared/url-utils";
+import { CSAPICollection } from "./model";
+import { maybeFetchOrLoad } from "./helpers";
 import { getCommandsUrl } from "./url_builder";
 
 /**
- * Command interface
- * Represents a single actuation instruction or command instance
- * issued to a System via a ControlStream.
+ * CommandsClient
+ * Provides typed access to the /commands collection and its items.
  */
-export interface Command {
-  id: string;
-  type: "Feature";
-  properties: {
-    name?: string;
-    description?: string;
-    issuedTime?: string;
-    executedTime?: string;
-    status?: "pending" | "inProgress" | "completed" | "failed";
-    commandType?: string;
-    parameters?: Record<string, any>;
-    result?: Record<string, any>;
-    controlStream?: {
-      id: string;
-      href?: string;
-    };
-    system?: {
-      id: string;
-      href?: string;
-    };
-    [key: string]: any;
-  };
-  links?: Array<{ href: string; rel: string; type?: string; title?: string }>;
-  [key: string]: any;
-}
+export class CommandsClient {
+  readonly apiRoot: string;
 
-/**
- * Retrieve all Commands (FeatureCollection).
- */
-export async function listCommands(
-  apiRoot: string,
-  options?: { fetchFn?: typeof fetch }
-): Promise<{ type: string; features: Command[] }> {
-  const url = getCommandsUrl(apiRoot);
-  const expanded = expandUrl(url);
-  return fetchJson(expanded, options);
-}
+  constructor(apiRoot: string) {
+    this.apiRoot = apiRoot;
+  }
 
-/**
- * Retrieve a specific Command by ID.
- */
-export async function getCommandById(
-  apiRoot: string,
-  id: string,
-  options?: { fetchFn?: typeof fetch }
-): Promise<Command> {
-  const url = `${getCommandsUrl(apiRoot)}/${encodeURIComponent(id)}`;
-  const expanded = expandUrl(url);
-  return fetchJson(expanded, options);
-}
+  /**
+   * Retrieves the commands collection.
+   * Uses fixture "commands" by default, or fetches live data when CSAPI_LIVE=true.
+   */
+  async list(): Promise<CSAPICollection> {
+    const url = getCommandsUrl(this.apiRoot);
+    const data = await maybeFetchOrLoad("commands", url);
+    return data as CSAPICollection;
+  }
 
-/**
- * Convenience export
- */
-export const CommandsClient = {
-  list: listCommands,
-  get: getCommandById,
-};
+  /**
+   * Retrieves a single command by ID.
+   * Example canonical path: /commands/{commandId}
+   */
+  async get(id: string): Promise<any> {
+    const url = `${getCommandsUrl(this.apiRoot)}/${id}`;
+    const data = await maybeFetchOrLoad(`command_${id}`, url);
+    return data;
+  }
+}
