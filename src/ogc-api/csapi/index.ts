@@ -45,7 +45,7 @@ export { SamplingFeaturesClient } from "./sampling-features";
 export { PropertiesClient } from "./properties";
 export { DatastreamsClient } from "./datastreams";
 export { ObservationsClient } from "./observations";
-export { ControlStreamsClient } from "./control-streams";
+export { ControlStreamsClient } from "./controlStreams";
 export { CommandsClient } from "./commands";
 export { FeasibilityClient } from "./feasibility";
 export { SystemEventsClient } from "./events";
