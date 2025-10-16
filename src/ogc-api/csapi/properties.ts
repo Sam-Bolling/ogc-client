@@ -3,8 +3,8 @@
  * Implements client-side access for the /properties collection.
  *
  * Traces to:
- *   - /req/property/collection-endpoint  (23-002 §10.9)
- *   - /req/property/items-endpoint       (23-002 §10.10)
+ *   - /req/property/collection-endpoint  (23-002 §10.7)
+ *   - /req/property/items-endpoint       (23-002 §10.8)
  *   - /req/property/canonical-url        (23-002 §7.4)
  *
  * Exports:
