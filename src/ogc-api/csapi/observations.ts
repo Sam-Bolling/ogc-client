@@ -1,72 +1,48 @@
 /**
- * OGC API – Connected Systems: Observations Client
- * Implements client logic for CSAPI Observation resources (Part 2 §10–11)
+ * OGC API – Connected Systems Part 2: Observations Client
+ * Implements client-side access for the /observations collection.
  *
- * Follows the pattern of Datastreams, Systems, and SamplingFeatures clients.
+ * Traces to:
+ *   - /req/observation/collection-endpoint  (23-002 §10.13)
+ *   - /req/observation/items-endpoint       (23-002 §10.14)
+ *   - /req/observation/canonical-url        (23-002 §7.4)
+ *
+ * Exports:
+ *   - ObservationsClient: main API client class
  */
 
-import { fetchJson } from "../../shared/http-utils";
-import { expandUrl } from "../../shared/url-utils";
+import { CSAPICollection } from "./model";
+import { maybeFetchOrLoad } from "./helpers";
 import { getObservationsUrl } from "./url_builder";
 
 /**
- * Observation interface
- * Represents a single measured or computed result associated with a
- * Datastream, Property, and Feature-of-Interest.
+ * ObservationsClient
+ * Provides typed access to the /observations collection and its items.
  */
-export interface Observation {
-  id: string;
-  type: "Feature";
-  properties: {
-    phenomenonTime?: string;
-    resultTime?: string;
-    result?: number | string | Record<string, any>;
-    unitOfMeasurement?: string;
-    datastream?: {
-      id: string;
-      href?: string;
-    };
-    featureOfInterest?: {
-      id: string;
-      href?: string;
-    };
-    [key: string]: any;
-  };
-  geometry?: any;
-  links?: Array<{ href: string; rel: string; type?: string; title?: string }>;
-  [key: string]: any;
-}
+export class ObservationsClient {
+  readonly apiRoot: string;
 
-/**
- * Retrieve all Observations for the API root (FeatureCollection).
- * May be filtered server-side by Datastream or Feature-of-Interest.
- */
-export async function listObservations(
-  apiRoot: string,
-  options?: { fetchFn?: typeof fetch }
-): Promise<{ type: string; features: Observation[] }> {
-  const url = getObservationsUrl(apiRoot);
-  const expanded = expandUrl(url);
-  return fetchJson(expanded, options);
-}
+  constructor(apiRoot: string) {
+    this.apiRoot = apiRoot;
+  }
 
-/**
- * Retrieve a specific Observation by ID.
- */
-export async function getObservationById(
-  apiRoot: string,
-  id: string,
-  options?: { fetchFn?: typeof fetch }
-): Promise<Observation> {
-  const url = `${getObservationsUrl(apiRoot)}/${encodeURIComponent(id)}`;
-  const expanded = expandUrl(url);
-  return fetchJson(expanded, options);
-}
+  /**
+   * Retrieves the observations collection.
+   * Uses fixture "observations" by default, or fetches live data when CSAPI_LIVE=true.
+   */
+  async list(): Promise<CSAPICollection> {
+    const url = getObservationsUrl(this.apiRoot);
+    const data = await maybeFetchOrLoad("observations", url);
+    return data as CSAPICollection;
+  }
 
-/**
- * Convenience export
- */
-export const ObservationsClient = {
-  list: listObservations,
-  get: getObservationById,
-};
+  /**
+   * Retrieves a single observation by ID.
+   * Example canonical path: /observations/{observationId}
+   */
+  async get(id: string): Promise<any> {
+    const url = `${getObservationsUrl(this.apiRoot)}/${id}`;
+    const data = await maybeFetchOrLoad(`observation_${id}`, url);
+    return data;
+  }
+}
