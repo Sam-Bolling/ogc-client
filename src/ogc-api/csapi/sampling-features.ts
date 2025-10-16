@@ -1,68 +1,48 @@
 /**
- * OGC API – Connected Systems: Sampling Features Client
- * Implements client logic for CSAPI SamplingFeature resources (Part 2 §10–11)
+ * OGC API – Connected Systems Part 2: Sampling Features Client
+ * Implements client-side access for the /samplingFeatures collection.
  *
- * Mirrors Systems and Deployments clients to maintain consistency.
+ * Traces to:
+ *   - /req/samplingfeature/collection-endpoint  (23-002 §10.7)
+ *   - /req/samplingfeature/items-endpoint       (23-002 §10.8)
+ *   - /req/samplingfeature/canonical-url        (23-002 §7.4)
+ *
+ * Exports:
+ *   - SamplingFeaturesClient: main API client class
  */
 
-import { fetchJson } from "../../shared/http-utils";
-import { expandUrl } from "../../shared/url-utils";
+import { CSAPICollection } from "./model";
+import { maybeFetchOrLoad } from "./helpers";
 import { getSamplingFeaturesUrl } from "./url_builder";
 
 /**
- * SamplingFeature interface
- * Represents a physical or logical feature that serves as the
- * feature-of-interest for observations or deployments.
+ * SamplingFeaturesClient
+ * Provides typed access to the /samplingFeatures collection and its items.
  */
-export interface SamplingFeature {
-  id: string;
-  type: "Feature";
-  geometry?: any;
-  properties: {
-    name?: string;
-    description?: string;
-    sampledFeature?: {
-      id: string;
-      href?: string;
-    };
-    relatedSystem?: {
-      id: string;
-      href?: string;
-    };
-    [key: string]: any;
-  };
-  links?: Array<{ href: string; rel: string; type?: string; title?: string }>;
-}
+export class SamplingFeaturesClient {
+  readonly apiRoot: string;
 
-/**
- * Retrieve all SamplingFeatures (FeatureCollection).
- */
-export async function listSamplingFeatures(
-  apiRoot: string,
-  options?: { fetchFn?: typeof fetch }
-): Promise<{ type: string; features: SamplingFeature[] }> {
-  const url = getSamplingFeaturesUrl(apiRoot);
-  const expanded = expandUrl(url);
-  return fetchJson(expanded, options);
-}
+  constructor(apiRoot: string) {
+    this.apiRoot = apiRoot;
+  }
 
-/**
- * Retrieve a specific SamplingFeature by ID.
- */
-export async function getSamplingFeatureById(
-  apiRoot: string,
-  id: string,
-  options?: { fetchFn?: typeof fetch }
-): Promise<SamplingFeature> {
-  const url = `${getSamplingFeaturesUrl(apiRoot)}/${encodeURIComponent(id)}`;
-  const expanded = expandUrl(url);
-  return fetchJson(expanded, options);
-}
+  /**
+   * Retrieves the samplingFeatures collection.
+   * Uses fixture "samplingFeatures" by default, or fetches live data when CSAPI_LIVE=true.
+   */
+  async list(): Promise<CSAPICollection> {
+    const url = getSamplingFeaturesUrl(this.apiRoot);
+    const data = await maybeFetchOrLoad("samplingFeatures", url);
+    return data as CSAPICollection;
+  }
 
-/**
- * Convenience export
- */
-export const SamplingFeaturesClient = {
-  list: listSamplingFeatures,
-  get: getSamplingFeatureById,
-};
+  /**
+   * Retrieves a single sampling feature by ID.
+   * Example canonical path: /samplingFeatures/{samplingFeatureId}
+   */
+  async get(id: string): Promise<any> {
+    const url = `${getSamplingFeaturesUrl(this.apiRoot)}/${id}`;
+    const data = await maybeFetchOrLoad(`samplingFeature_${id}`, url);
+    return data;
+  }
+}
