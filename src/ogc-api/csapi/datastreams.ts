@@ -1,73 +1,48 @@
 /**
- * OGC API – Connected Systems: Datastreams Client
- * Implements client logic for CSAPI Datastream resources (Part 2 §10–11)
+ * OGC API – Connected Systems Part 2: Datastreams Client
+ * Implements client-side access for the /datastreams collection.
  *
- * Consistent with Systems, Procedures, and Properties clients.
+ * Traces to:
+ *   - /req/datastream/collection-endpoint  (23-002 §10.11)
+ *   - /req/datastream/items-endpoint       (23-002 §10.12)
+ *   - /req/datastream/canonical-url        (23-002 §7.4)
+ *
+ * Exports:
+ *   - DatastreamsClient: main API client class
  */
 
-import { fetchJson } from "../../shared/http-utils";
-import { expandUrl } from "../../shared/url-utils";
+import { CSAPICollection } from "./model";
+import { maybeFetchOrLoad } from "./helpers";
 import { getDatastreamsUrl } from "./url_builder";
 
 /**
- * Datastream interface
- * Represents a stream of Observations associated with a System,
- * Property, and SamplingFeature.
+ * DatastreamsClient
+ * Provides typed access to the /datastreams collection and its items.
  */
-export interface Datastream {
-  id: string;
-  type: "Feature";
-  properties: {
-    name?: string;
-    description?: string;
-    observedProperty?: {
-      id: string;
-      href?: string;
-    };
-    procedure?: {
-      id: string;
-      href?: string;
-    };
-    featureOfInterest?: {
-      id: string;
-      href?: string;
-    };
-    unitOfMeasurement?: string;
-    [key: string]: any;
-  };
-  links?: Array<{ href: string; rel: string; type?: string; title?: string }>;
-  [key: string]: any;
-}
+export class DatastreamsClient {
+  readonly apiRoot: string;
 
-/**
- * Retrieve all Datastreams (FeatureCollection).
- */
-export async function listDatastreams(
-  apiRoot: string,
-  options?: { fetchFn?: typeof fetch }
-): Promise<{ type: string; features: Datastream[] }> {
-  const url = getDatastreamsUrl(apiRoot);
-  const expanded = expandUrl(url);
-  return fetchJson(expanded, options);
-}
+  constructor(apiRoot: string) {
+    this.apiRoot = apiRoot;
+  }
 
-/**
- * Retrieve a specific Datastream by ID.
- */
-export async function getDatastreamById(
-  apiRoot: string,
-  id: string,
-  options?: { fetchFn?: typeof fetch }
-): Promise<Datastream> {
-  const url = `${getDatastreamsUrl(apiRoot)}/${encodeURIComponent(id)}`;
-  const expanded = expandUrl(url);
-  return fetchJson(expanded, options);
-}
+  /**
+   * Retrieves the datastreams collection.
+   * Uses fixture "datastreams" by default, or fetches live data when CSAPI_LIVE=true.
+   */
+  async list(): Promise<CSAPICollection> {
+    const url = getDatastreamsUrl(this.apiRoot);
+    const data = await maybeFetchOrLoad("datastreams", url);
+    return data as CSAPICollection;
+  }
 
-/**
- * Convenience export
- */
-export const DatastreamsClient = {
-  list: listDatastreams,
-  get: getDatastreamById,
-};
+  /**
+   * Retrieves a single datastream by ID.
+   * Example canonical path: /datastreams/{datastreamId}
+   */
+  async get(id: string): Promise<any> {
+    const url = `${getDatastreamsUrl(this.apiRoot)}/${id}`;
+    const data = await maybeFetchOrLoad(`datastream_${id}`, url);
+    return data;
+  }
+}
