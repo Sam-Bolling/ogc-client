@@ -24,7 +24,7 @@ const apiRoot = process.env.CSAPI_API_ROOT || "https://example.csapi.server";
  * The API landing page SHALL advertise all canonical CSAPI Part 2 endpoints.
  */
 test("Landing page advertises all canonical CSAPI Part 2 endpoints", async () => {
-  const data = await maybeFetchOrLoad("endpointsPart2Landing", apiRoot);
+  const data = await maybeFetchOrLoad("endpoints_part2_landing", apiRoot);
 
   expect(data).toBeDefined();
   expect(Array.isArray(data.links)).toBe(true);
