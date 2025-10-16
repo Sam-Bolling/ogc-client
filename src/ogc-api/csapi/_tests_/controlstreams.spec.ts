@@ -24,11 +24,11 @@ const apiRoot = process.env.CSAPI_API_ROOT || "https://example.csapi.server";
 
 /**
  * Requirement: /req/controlstream/canonical-endpoint
- * The /controlstreams endpoint SHALL be exposed as the canonical ControlStreams collection.
+ * The /controlStreams endpoint SHALL be exposed as the canonical ControlStreams collection.
  */
-test("GET /controlstreams is exposed as canonical ControlStreams collection", async () => {
+test("GET /controlStreams is exposed as canonical ControlStreams collection", async () => {
   const url = getControlStreamsUrl(apiRoot);
-  const data = await maybeFetchOrLoad("controlstreams", url);
+  const data = await maybeFetchOrLoad("controlStreams", url);
 
   expectFeatureCollection(data, "ControlStream");
   expect(Array.isArray(data.features)).toBe(true);
@@ -37,11 +37,11 @@ test("GET /controlstreams is exposed as canonical ControlStreams collection", as
 
 /**
  * Requirement: /req/controlstream/resources-endpoint
- * The /controlstreams collection SHALL conform to OGC API – Features collection rules.
+ * The /controlStreams collection SHALL conform to OGC API – Features collection rules.
  */
-test("GET /controlstreams returns FeatureCollection (itemType=ControlStream)", async () => {
+test("GET /controlStreams returns FeatureCollection (itemType=ControlStream)", async () => {
   const url = getControlStreamsUrl(apiRoot);
-  const data = await maybeFetchOrLoad("controlstreams", url);
+  const data = await maybeFetchOrLoad("controlStreams", url);
 
   expectFeatureCollection(data, "ControlStream");
 
@@ -53,15 +53,15 @@ test("GET /controlstreams returns FeatureCollection (itemType=ControlStream)", a
 
 /**
  * Requirement: /req/controlstream/canonical-url
- * Each ControlStream SHALL have a canonical item URL at /controlstreams/{id}.
+ * Each ControlStream SHALL have a canonical item URL at /controlStreams/{id}.
  */
-test("ControlStreams have canonical item URL at /controlstreams/{id}", async () => {
+test("ControlStreams have canonical item URL at /controlStreams/{id}", async () => {
   const url = getControlStreamsUrl(apiRoot);
-  const data = await maybeFetchOrLoad("controlstreams", url);
+  const data = await maybeFetchOrLoad("controlStreams", url);
   const first = data.features[0];
 
-  const itemUrl = `${apiRoot}/controlstreams/${first.id}`;
-  expectCanonicalUrl(itemUrl, /^https?:\/\/.+\/controlstreams\/[^/]+$/);
+  const itemUrl = `${apiRoot}/controlStreams/${first.id}`;
+  expectCanonicalUrl(itemUrl, /^https?:\/\/.+\/controlStreams\/[^/]+$/);
 });
 
 /**
@@ -70,7 +70,7 @@ test("ControlStreams have canonical item URL at /controlstreams/{id}", async () 
  */
 test("ControlStreams optionally link to related Systems or Commands", async () => {
   const url = getControlStreamsUrl(apiRoot);
-  const data = await maybeFetchOrLoad("controlstreams", url);
+  const data = await maybeFetchOrLoad("controlStreams", url);
 
   const first = data.features[0];
   const props = first.properties ?? {};
