@@ -215,6 +215,10 @@ export function getDatastreamsUrl(apiRoot: string, systemId?: string, deployment
   return `${apiRoot}/datastreams`;
 }
 
+export function getDatastreamByIdUrl(apiRoot: string, id: string): string {
+  return `${apiRoot}/datastreams/${id}`;
+}
+
 export function getObservationsUrl(apiRoot: string, datastreamId?: string): string {
   return datastreamId
     ? `${apiRoot}/datastreams/${datastreamId}/observations`
