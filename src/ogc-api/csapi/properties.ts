@@ -1,59 +1,48 @@
 /**
- * OGC API – Connected Systems: Properties Client
- * Implements client logic for CSAPI Property resources (Part 2 §10–11)
+ * OGC API – Connected Systems Part 2: Properties Client
+ * Implements client-side access for the /properties collection.
  *
- * Mirrors Systems and SamplingFeatures clients for consistency.
+ * Traces to:
+ *   - /req/property/collection-endpoint  (23-002 §10.9)
+ *   - /req/property/items-endpoint       (23-002 §10.10)
+ *   - /req/property/canonical-url        (23-002 §7.4)
+ *
+ * Exports:
+ *   - PropertiesClient: main API client class
  */
 
-import { fetchJson } from "../../shared/http-utils";
-import { expandUrl } from "../../shared/url-utils";
+import { CSAPICollection } from "./model";
+import { maybeFetchOrLoad } from "./helpers";
 import { getPropertiesUrl } from "./url_builder";
 
 /**
- * Property interface
- * Represents a measurable or controllable attribute observed or commanded
- * within the CSAPI data model (e.g., temperature, pressure, switchState).
+ * PropertiesClient
+ * Provides typed access to the /properties collection and its items.
  */
-export interface Property {
-  id: string;
-  type: "Property";
-  name?: string;
-  definition?: string;
-  description?: string;
-  observedUnit?: string;
-  links?: Array<{ href: string; rel: string; type?: string; title?: string }>;
-  [key: string]: any;
-}
+export class PropertiesClient {
+  readonly apiRoot: string;
 
-/**
- * Retrieve the list of available Properties (Collection).
- */
-export async function listProperties(
-  apiRoot: string,
-  options?: { fetchFn?: typeof fetch }
-): Promise<{ type: string; members: Property[] }> {
-  const url = getPropertiesUrl(apiRoot);
-  const expanded = expandUrl(url);
-  return fetchJson(expanded, options);
-}
+  constructor(apiRoot: string) {
+    this.apiRoot = apiRoot;
+  }
 
-/**
- * Retrieve a specific Property by ID.
- */
-export async function getPropertyById(
-  apiRoot: string,
-  id: string,
-  options?: { fetchFn?: typeof fetch }
-): Promise<Property> {
-  const url = `${getPropertiesUrl(apiRoot)}/${encodeURIComponent(id)}`;
-  const expanded = expandUrl(url);
-  return fetchJson(expanded, options);
-}
+  /**
+   * Retrieves the properties collection.
+   * Uses fixture "properties" by default, or fetches live data when CSAPI_LIVE=true.
+   */
+  async list(): Promise<CSAPICollection> {
+    const url = getPropertiesUrl(this.apiRoot);
+    const data = await maybeFetchOrLoad("properties", url);
+    return data as CSAPICollection;
+  }
 
-/**
- * Convenience export
- */
-export const PropertiesClient = {
-  list: listProperties,
-  get: getPropertyById,
-};
+  /**
+   * Retrieves a single property by ID.
+   * Example canonical path: /properties/{propertyId}
+   */
+  async get(id: string): Promise<any> {
+    const url = `${getPropertiesUrl(this.apiRoot)}/${id}`;
+    const data = await maybeFetchOrLoad(`property_${id}`, url);
+    return data;
+  }
+}
