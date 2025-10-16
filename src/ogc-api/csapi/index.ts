@@ -41,7 +41,7 @@ export * from "./url_builder";
 export { SystemsClient } from "./systems";
 export { DeploymentsClient } from "./deployments";
 export { ProceduresClient } from "./procedures";
-export { SamplingFeaturesClient } from "./sampling-features";
+export { SamplingFeaturesClient } from "./samplingFeatures";
 export { PropertiesClient } from "./properties";
 export { DatastreamsClient } from "./datastreams";
 export { ObservationsClient } from "./observations";

@@ -1,10 +1,10 @@
 /**
- * OGC API – Connected Systems Part 2: Sampling Features Client
+ * OGC API – Connected Systems Part 2: SamplingFeatures Client
  * Implements client-side access for the /samplingFeatures collection.
  *
  * Traces to:
- *   - /req/samplingfeature/collection-endpoint  (23-002 §10.7)
- *   - /req/samplingfeature/items-endpoint       (23-002 §10.8)
+ *   - /req/samplingfeature/collection-endpoint  (23-002 §10.5)
+ *   - /req/samplingfeature/items-endpoint       (23-002 §10.6)
  *   - /req/samplingfeature/canonical-url        (23-002 §7.4)
  *
  * Exports:
