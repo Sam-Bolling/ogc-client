@@ -1,0 +1,17 @@
+{
+  "type": "FeatureCollection",
+  "itemType": "Deployment",
+  "features": [
+    {
+      "id": "dep-001",
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "name": "Example Deployment",
+        "description": "Stub Deployment entry for canonical endpoint tests",
+        "system": "sys-001",
+        "location": "https://example.csapi.server/systems/sys-001/location"
+      }
+    }
+  ]
+}
