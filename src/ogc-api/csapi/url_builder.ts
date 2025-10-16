@@ -226,7 +226,7 @@ export function getObservationsUrl(apiRoot: string, datastreamId?: string): stri
 }
 
 export function getControlStreamsUrl(apiRoot: string): string {
-  return `${apiRoot}/controlstreams`;
+  return `${apiRoot}/controlStreams`;
 }
 
 export function getCommandsUrl(apiRoot: string): string {
@@ -252,7 +252,7 @@ export const CANONICAL_ENDPOINTS = [
   "properties",
   "datastreams",
   "observations",
-  "controlstreams",
+  "controlStreams",
   "commands",
   "feasibility",
   "systemEvents",
