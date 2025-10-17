@@ -2,6 +2,27 @@
   "type": "FeatureCollection",
   "itemType": "System",
   "features": [
-    { "type": "Feature", "id": "sys-001", "properties": { "name": "SystemA" } }
+    {
+      "id": "sys-001",
+      "type": "Feature",
+      "properties": {
+        "name": "SystemA",
+        "description": "Example System fixture for CSAPI Part 2 testing"
+      },
+      "links": [
+        {
+          "rel": "self",
+          "href": "https://example.csapi.server/systems/sys-001"
+        },
+        {
+          "rel": "deployments",
+          "href": "https://example.csapi.server/deployments"
+        },
+        {
+          "rel": "events",
+          "href": "https://example.csapi.server/systems/sys-001/events"
+        }
+      ]
+    }
   ]
 }
