@@ -1,7 +1,0 @@
-{
-  "type": "FeatureCollection",
-  "itemType": "SystemEvent",
-  "features": [
-    { "type": "Feature", "id": "evt-101", "properties": { "system": { "id": "sys-001" }, "eventType": "PowerOn" } }
-  ]
-}
