@@ -237,8 +237,12 @@ export function getFeasibilityUrl(apiRoot: string): string {
   return `${apiRoot}/feasibility`;
 }
 
-export function getSystemEventsUrl(apiRoot: string, systemId?: string): string {
-  return systemId ? `${apiRoot}/systems/${systemId}/events` : `${apiRoot}/systemEvents`;
+export function getSystemEventsUrl(apiRoot: string): string {
+  return `${apiRoot.replace(/\/$/, "")}/systemEvents`;
+}
+
+export function getSystemEventsForSystemUrl(apiRoot: string, systemId: string): string {
+  return `${apiRoot.replace(/\/$/, "")}/systems/${systemId}/events`;
 }
 
 /**
