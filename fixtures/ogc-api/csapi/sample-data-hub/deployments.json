@@ -2,6 +2,27 @@
   "type": "FeatureCollection",
   "itemType": "Deployment",
   "features": [
-    { "type": "Feature", "id": "dep-001", "properties": { "featureType": "sosa:Deployment" } }
+    {
+      "id": "dep-001",
+      "type": "Feature",
+      "properties": {
+        "name": "DeploymentA",
+        "description": "Example Deployment fixture for CSAPI Part 2 testing"
+      },
+      "links": [
+        {
+          "rel": "self",
+          "href": "https://example.csapi.server/deployments/dep-001"
+        },
+        {
+          "rel": "system",
+          "href": "https://example.csapi.server/systems/sys-001"
+        },
+        {
+          "rel": "procedure",
+          "href": "https://example.csapi.server/procedures/proc-001"
+        }
+      ]
+    }
   ]
 }
