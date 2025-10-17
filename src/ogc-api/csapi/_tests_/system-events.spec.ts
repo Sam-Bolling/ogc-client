@@ -1,6 +1,6 @@
 /**
  * Tests for CSAPI Part 2 — System Events
- * Validates canonical endpoints, nested event listings, and collection semantics for events.
+ * Validates canonical endpoints, nested event listings, and collection semantics for system events.
  *
  * Traces to:
  *   - /req/system-event/canonical-endpoint  (23-002 §7.4 Req42)
@@ -15,7 +15,10 @@
  *   - Confirms nested event access under Systems
  */
 
-import { getSystemEventsUrl } from "../url_builder";
+import {
+  getSystemEventsUrl,
+  getSystemEventsForSystemUrl,
+} from "../url_builder";
 import {
   maybeFetchOrLoad,
   expectFeatureCollection,
@@ -72,12 +75,12 @@ test("System Events have canonical item URL at /systemEvents/{id}", async () => 
  */
 test("GET /systems/{id}/events lists events for a System", async () => {
   const systemId = "sys-001"; // placeholder; can come from fixtures later
-  const url = getSystemEventsUrl(apiRoot, systemId);
+  const url = getSystemEventsForSystemUrl(apiRoot, systemId);
   const data = await maybeFetchOrLoad("systemEvents_nested", url);
 
   expectFeatureCollection(data, "SystemEvent");
 
-  // Optional: check events reference correct system
+  // Optional: ensure events reference the correct system
   const allSameSystem =
     data.features.every((f: any) => f.properties?.system?.id === systemId) ||
     data.features.length === 0;
