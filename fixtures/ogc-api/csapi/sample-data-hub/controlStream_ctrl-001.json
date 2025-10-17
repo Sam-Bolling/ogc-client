@@ -1,0 +1,10 @@
+{
+  "id": "ctrl-001",
+  "type": "Feature",
+  "geometry": null,
+  "properties": {
+    "name": "Example Control Stream",
+    "description": "Test fixture for single Control Stream resource",
+    "controlledSystem": { "id": "sys-001" }
+  }
+}

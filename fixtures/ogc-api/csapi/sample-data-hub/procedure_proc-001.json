@@ -1,0 +1,10 @@
+{
+  "id": "proc-001",
+  "type": "Feature",
+  "geometry": null,
+  "properties": {
+    "name": "Example Procedure",
+    "description": "Test fixture for single Procedure resource",
+    "type": "sensor"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "id": "evt-001",
+  "type": "Feature",
+  "geometry": null,
+  "properties": {
+    "name": "Example System Event",
+    "description": "Test fixture for single System Event resource",
+    "system": { "id": "sys-001" },
+    "eventType": "statusChange",
+    "timestamp": "2025-01-01T00:00:00Z"
+  }
+}

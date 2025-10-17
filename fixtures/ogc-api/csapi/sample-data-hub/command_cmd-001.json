@@ -1,0 +1,11 @@
+{
+  "id": "cmd-001",
+  "type": "Feature",
+  "geometry": null,
+  "properties": {
+    "name": "Example Command",
+    "description": "Test fixture for single Command resource",
+    "target": { "id": "sys-001" },
+    "parameters": { "mode": "auto" }
+  }
+}

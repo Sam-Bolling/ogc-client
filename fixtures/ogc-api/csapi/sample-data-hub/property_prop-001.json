@@ -1,0 +1,10 @@
+{
+  "id": "prop-001",
+  "type": "Feature",
+  "geometry": null,
+  "properties": {
+    "name": "Temperature",
+    "definition": "http://qudt.org/vocab/quantitykind/Temperature",
+    "uom": "degC"
+  }
+}

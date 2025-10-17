@@ -1,0 +1,10 @@
+{
+  "id": "sys-001",
+  "type": "Feature",
+  "geometry": null,
+  "properties": {
+    "name": "Example System",
+    "description": "Test fixture for single System resource",
+    "status": "active"
+  }
+}

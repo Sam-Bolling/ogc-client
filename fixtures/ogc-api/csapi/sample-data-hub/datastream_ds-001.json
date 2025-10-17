@@ -1,0 +1,11 @@
+{
+  "id": "ds-001",
+  "type": "Feature",
+  "geometry": null,
+  "properties": {
+    "name": "Example Datastream",
+    "observedProperty": { "id": "prop-001" },
+    "procedure": { "id": "proc-001" },
+    "featureOfInterest": { "id": "sf-001" }
+  }
+}
