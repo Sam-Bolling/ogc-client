@@ -8,7 +8,7 @@ October 2025
 ## 1. Executive Summary
 
 This document describes the **revised implementation plan** for adding **OGC API – Connected Systems (Parts 1 & 2)** client-side capability to the open-source **`ogc-client`** library.  
-It replaces the pre-AI draft plan with the **actual structured process** executed collaboratively between August – October 2025.
+It replaces the draft plan with the **actual structured process** executed collaboratively between August – October 2025.
 
 The purpose of this effort is to provide a robust, modular, and standards-compliant TypeScript implementation of the **Connected Systems API** that:
 
